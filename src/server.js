@@ -19,6 +19,7 @@ import reclamationRoutes from './routes/reclamation.routes.js';
 import communicationRoutes from './routes/communication.routes.js';
 import workflowRoutes from './routes/workflow.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
+import seedRoutes from './routes/seedRoute.js';
 
 dotenv.config();
 
@@ -90,6 +91,7 @@ app.use('/api/reclamation', reclamationRoutes);
 app.use('/api/communications', communicationRoutes);
 app.use('/api/workflow', workflowRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api', seedRoutes);
 
 // ============================================================================
 // ERROR HANDLING
