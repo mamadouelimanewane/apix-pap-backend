@@ -47,5 +47,14 @@ const CompensationSchema = new mongoose.Schema(
 );
 
 CompensationSchema.index({ papCode: 1, status: 1 });
+CompensationSchema.index({ bienCode: 1, status: 1 });
+
+CompensationSchema.pre('save', async function (next) {
+  if (!this.compensationCode) {
+    const count = await this.constructor.countDocuments({ papCode: this.papCode });
+    this.compensationCode = `COMP-${this.papCode}-${String(count + 1).padStart(3, '0')}`;
+  }
+  next();
+});
 
 export default mongoose.model('Compensation', CompensationSchema);

@@ -1,16 +1,15 @@
 import express from 'express';
-import { asyncHandler } from '../middleware/errorHandler.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, authorize } from '../middleware/auth.js';
+import { evaluationController } from '../controllers/evaluation.controller.js';
 
 const router = express.Router();
 router.use(authenticate);
 
-router.post('/create/:bienCode', asyncHandler(async (req, res) => {
-  res.status(201).json({ success: true, message: 'Evaluation created', data: {} });
-}));
-
-router.get('/list', asyncHandler(async (req, res) => {
-  res.json({ success: true, data: [] });
-}));
+router.get('/list/:papCode', evaluationController.listEvaluationsByPAP);
+router.get('/stats/:papCode', evaluationController.getEvaluationStats);
+router.get('/:evaluationCode', evaluationController.getEvaluationById);
+router.post('/create/:papCode/:bienCode', authorize(['admin', 'chef_projet', 'gestionnaire']), evaluationController.createEvaluation);
+router.post('/approve/:evaluationCode', authorize(['admin', 'chef_projet']), evaluationController.approveEvaluation);
+router.post('/reject/:evaluationCode', authorize(['admin', 'chef_projet']), evaluationController.rejectEvaluation);
 
 export default router;

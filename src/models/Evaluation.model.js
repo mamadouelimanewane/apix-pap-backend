@@ -50,5 +50,14 @@ const EvaluationSchema = new mongoose.Schema(
 );
 
 EvaluationSchema.index({ papCode: 1, bienCode: 1 });
+EvaluationSchema.index({ status: 1, date: -1 });
+
+EvaluationSchema.pre('save', async function (next) {
+  if (!this.evaluationCode) {
+    const count = await this.constructor.countDocuments({ papCode: this.papCode });
+    this.evaluationCode = `EVAL-${this.papCode}-${String(count + 1).padStart(3, '0')}`;
+  }
+  next();
+});
 
 export default mongoose.model('Evaluation', EvaluationSchema);

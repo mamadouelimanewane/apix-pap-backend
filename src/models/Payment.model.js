@@ -45,5 +45,15 @@ const PaymentSchema = new mongoose.Schema(
 );
 
 PaymentSchema.index({ papCode: 1, status: 1 });
+PaymentSchema.index({ compensationCode: 1 });
+PaymentSchema.index({ status: 1, completionDate: -1 });
+
+PaymentSchema.pre('save', async function (next) {
+  if (!this.paymentCode) {
+    const count = await this.constructor.countDocuments({ papCode: this.papCode });
+    this.paymentCode = `PAY-${this.papCode}-${String(count + 1).padStart(3, '0')}`;
+  }
+  next();
+});
 
 export default mongoose.model('Payment', PaymentSchema);

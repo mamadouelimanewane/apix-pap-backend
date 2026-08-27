@@ -1,25 +1,15 @@
 import express from 'express';
-import { asyncHandler } from '../middleware/errorHandler.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, authorize } from '../middleware/auth.js';
+import { bienController } from '../controllers/bien.controller.js';
 
 const router = express.Router();
 router.use(authenticate);
 
-// Stub routes - to be implemented
-router.get('/list/:papCode', asyncHandler(async (req, res) => {
-  res.json({ success: true, message: 'Get biens - To be implemented', data: [] });
-}));
-
-router.get('/:bienCode', asyncHandler(async (req, res) => {
-  res.json({ success: true, message: 'Get bien - To be implemented', data: null });
-}));
-
-router.post('/create/:papCode', asyncHandler(async (req, res) => {
-  res.status(201).json({ success: true, message: 'Bien created - To be implemented', data: null });
-}));
-
-router.put('/:bienCode', asyncHandler(async (req, res) => {
-  res.json({ success: true, message: 'Bien updated - To be implemented', data: null });
-}));
+router.get('/list/:papCode', bienController.listBiensByPAP);
+router.get('/stats/:papCode', bienController.getBienStats);
+router.get('/:bienCode', bienController.getBienById);
+router.post('/create/:papCode', authorize(['admin', 'chef_projet', 'gestionnaire']), bienController.createBien);
+router.put('/:bienCode', authorize(['admin', 'chef_projet', 'gestionnaire']), bienController.updateBien);
+router.delete('/:bienCode', authorize(['admin', 'chef_projet']), bienController.deleteBien);
 
 export default router;

@@ -1,16 +1,16 @@
 import express from 'express';
-import { asyncHandler } from '../middleware/errorHandler.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, authorize } from '../middleware/auth.js';
+import { compensationController } from '../controllers/compensation.controller.js';
 
 const router = express.Router();
 router.use(authenticate);
 
-router.post('/submit/:bienCode', asyncHandler(async (req, res) => {
-  res.status(201).json({ success: true, message: 'Compensation submitted', data: {} });
-}));
-
-router.get('/list', asyncHandler(async (req, res) => {
-  res.json({ success: true, data: [] });
-}));
+router.get('/list/:papCode', compensationController.listCompensationsByPAP);
+router.get('/stats/:papCode', compensationController.getCompensationStats);
+router.get('/:compensationCode', compensationController.getCompensationById);
+router.post('/propose/:papCode/:bienCode', authorize(['admin', 'chef_projet', 'gestionnaire']), compensationController.proposeCompensation);
+router.post('/review/:compensationCode', authorize(['admin', 'chef_projet']), compensationController.reviewCompensation);
+router.post('/approve/:compensationCode', authorize(['admin', 'chef_projet']), compensationController.approveCompensation);
+router.post('/reject/:compensationCode', authorize(['admin', 'chef_projet']), compensationController.rejectCompensation);
 
 export default router;
