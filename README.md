@@ -1,138 +1,191 @@
-# APIX-PAP Backend API
+# APIX-PAP Backend v1.0.0
 
-Backend Node.js/Express pour la plateforme APIX-PAP (Gestion des Personnes Affectées par les Projets).
+Backend Node.js/Express pour la plateforme APIX-PAP (Affectés par la Terre). Gestion complète du workflow de 6 phases: Enregistrement → Évaluation → Compensation → Paiement → Réclamations → Clôture.
 
-## 🚀 Quick Start
+## 🚀 Démarrage Rapide
 
 ### Installation
 
 ```bash
-# Install dependencies
+# Installation des dépendances
 npm install
 
-# Create .env file
+# Configuration
 cp .env.example .env
 
-# Start MongoDB (if not running)
+# Démarrage MongoDB
 mongod
 
-# Run development server
+# Lancer le serveur de développement
 npm run dev
 
-# Run production server
+# Lancer en production
 npm start
 ```
 
-### Environment Setup
+### Configuration (.env)
 
 ```env
 NODE_ENV=development
 PORT=3000
 MONGODB_URI=mongodb://localhost:27017/apix_pap
-JWT_SECRET=your_secret_key_here
-CORS_ORIGIN=http://localhost:5173
+JWT_SECRET=your_very_secret_key_generate_with_crypto
+JWT_EXPIRE=7d
+CORS_ORIGIN=http://localhost:5173,http://localhost:3000
+LOG_LEVEL=debug
 ```
 
-## 📋 API Endpoints
+### Seed Database
 
-### Authentication
-- `POST /api/auth/login` - Login with email/password
-- `GET /api/auth/profile` - Get current user profile
-- `POST /api/auth/logout` - Logout user
+```bash
+npm run seed
+```
 
-### PAP Management
-- `GET /api/pap/list` - List all PAPs with filters
-- `GET /api/pap/:papCode` - Get PAP details
-- `POST /api/pap/create` - Create new PAP
-- `PUT /api/pap/:papCode` - Update PAP
-- `GET /api/pap/search` - Search PAPs
+Génère 50 PAPs + 150 Biens avec données réalistes.
 
-### Properties (Biens)
-- `GET /api/bien/list/:papCode` - List properties for PAP
-- `GET /api/bien/:bienCode` - Get property details
-- `POST /api/bien/create/:papCode` - Create property
-- `PUT /api/bien/:bienCode` - Update property
+**Vérification**: `http://localhost:3000/health` → `{"status": "OK"}`
 
-### Evaluations
-- `POST /api/evaluation/create/:bienCode` - Create evaluation
-- `GET /api/evaluation/list` - List evaluations
+## 📋 API Endpoints (30+)
+
+### Authentification
+- `POST /api/auth/login` - Obtenir token (email/password)
+- `GET /api/auth/profile` - Profil utilisateur
+- `POST /api/auth/logout` - Logout
+
+### PAP (Affectés par la Terre)
+- `GET /api/pap/list` - Lister PAPs (page, limit, status, zone)
+- `GET /api/pap/:papCode` - Détails PAP
+- `GET /api/pap/search?q=...` - Chercher PAP
+- `GET /api/pap/stats` - Statistiques (by status/zone)
+- `POST /api/pap/create` - Créer PAP (Chef+)
+- `PUT /api/pap/:papCode` - Mettre à jour (Chef+)
+
+### Bien (Propriétés)
+- `GET /api/bien/list/:papCode` - Lister biens du PAP
+- `GET /api/bien/:bienCode` - Détails bien
+- `GET /api/bien/stats/:papCode` - Stats (by type/status)
+- `POST /api/bien/create/:papCode` - Créer bien (Chef+)
+- `PUT /api/bien/:bienCode` - Mettre à jour (Chef+)
+- `DELETE /api/bien/:bienCode` - Supprimer (Admin)
+
+### Évaluation
+- `GET /api/evaluation/list/:papCode` - Évaluations du PAP
+- `GET /api/evaluation/:evaluationCode` - Détails évaluation
+- `GET /api/evaluation/stats/:papCode` - Stats évaluations
+- `POST /api/evaluation/create/:papCode/:bienCode` - Créer (Chef+)
+- `POST /api/evaluation/approve/:evaluationCode` - Approuver (Chef+)
+- `POST /api/evaluation/reject/:evaluationCode` - Rejeter (Chef+)
 
 ### Compensation
-- `POST /api/compensation/submit/:bienCode` - Submit compensation
-- `GET /api/compensation/list` - List compensations
+- `GET /api/compensation/list/:papCode` - Compensations du PAP
+- `GET /api/compensation/stats/:papCode` - Stats compensations
+- `POST /api/compensation/propose/:papCode/:bienCode` - Proposer (Chef+)
+- `POST /api/compensation/review/:compensationCode` - Examiner (Chef+)
+- `POST /api/compensation/approve/:compensationCode` - Approuver (Chef+)
+- `POST /api/compensation/reject/:compensationCode` - Rejeter (Chef+)
 
-### Payments
-- `POST /api/payment/initiate/:compensationId` - Initiate payment
-- `GET /api/payment/list` - List payments
+### Paiement
+- `GET /api/payment/list/:papCode` - Paiements du PAP
+- `GET /api/payment/stats/:papCode` - Stats paiements
+- `POST /api/payment/initiate/:papCode/:compensationCode` - Initier (Chef+)
+- `POST /api/payment/confirm/:paymentCode` - Confirmer (Chef+)
+- `POST /api/payment/complete/:paymentCode` - Finaliser (Chef+)
+- `POST /api/payment/fail/:paymentCode` - Échouer (Chef+)
 
-### Reclamations
-- `POST /api/reclamation/create/:papCode` - Create reclamation
-- `GET /api/reclamation/list/:papCode` - List reclamations
+**Voir [API_TESTING.md](./API_TESTING.md) pour exemples complets avec cURL**
 
-### Communications
-- `GET /api/communications/messages/:papCode` - Get messages
-- `GET /api/communications/notifications` - Get notifications
+## 🔐 Authentification & Autorisations
 
-### Workflows
-- `POST /api/workflow/create` - Create workflow
-- `GET /api/workflow/:papCode` - Get workflow
-
-### Analytics
-- `GET /api/analytics/:type` - Get analytics data
-
-## 🔐 Authentication
-
-All protected endpoints require JWT token in Authorization header:
+Tous les endpoints protégés requièrent JWT en Authorization header:
 
 ```
 Authorization: Bearer <token>
 ```
 
-### Demo Users
+### Utilisateurs Demo
 
-```
-Email: admin@apix.sn | Password: password | Role: admin
-Email: chef@apix.sn | Password: password | Role: chef_projet
-Email: gestionnaire@apix.sn | Password: password | Role: gestionnaire
-Email: agent@apix.sn | Password: password | Role: agent_terrain
-```
+| Email | Mot de passe | Rôle | Permissions |
+|-------|---|---|---|
+| admin@apix.sn | password | Admin | Tous |
+| chef@apix.sn | password | Chef Projet | Gestion PAP, Compensation, Paiement |
+| gestionnaire@apix.sn | password | Gestionnaire | PAP, Biens, Évaluation |
+| agent@apix.sn | password | Agent Terrain | Lecture, Terrain |
 
-## 🧪 Testing
+### Obtenir Token
 
 ```bash
-# Run tests
-npm run test
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@apix.sn",
+    "password": "password"
+  }'
 
-# Run tests with coverage
-npm run test:coverage
-
-# Watch mode
-npm run test:watch
+# Réponse:
+# { "token": "eyJhbGciOiJIUzI1NiIs...", "user": { ... } }
 ```
 
-## 📦 Project Structure
+## 🧪 Tests et Documentation
+
+```bash
+# Tester workflow complet
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@apix.sn","password":"password"}'
+```
+
+**Guides complets:**
+- [API_TESTING.md](./API_TESTING.md) — Tous les exemples cURL
+- [INSTALLATION_GUIDE.md](./INSTALLATION_GUIDE.md) — Setup détaillé + Troubleshooting
+
+## 📦 Structure Projet
 
 ```
 src/
-├── config/          # Configuration files
-├── middleware/      # Express middleware
-├── models/          # Mongoose schemas
-├── routes/          # API routes
-├── controllers/     # Business logic (to be added)
-├── services/        # Utility services (to be added)
-└── server.js        # Main entry point
+├── config/          # MongoDB connection
+├── middleware/
+│   ├── auth.js      # JWT + RBAC
+│   ├── errorHandler.js
+│   └── logger.js
+├── models/          # Mongoose schemas (5 entités)
+│   ├── PAP.model.js
+│   ├── Bien.model.js
+│   ├── Evaluation.model.js
+│   ├── Compensation.model.js
+│   └── Payment.model.js
+├── routes/          # API endpoints (6 modules)
+│   ├── auth.routes.js
+│   ├── pap.routes.js
+│   ├── bien.routes.js
+│   ├── evaluation.routes.js
+│   ├── compensation.routes.js
+│   └── payment.routes.js
+├── controllers/     # Business logic (4 contrôleurs)
+│   ├── pap.controller.js
+│   ├── bien.controller.js
+│   ├── evaluation.controller.js
+│   ├── compensation.controller.js
+│   └── payment.controller.js
+├── utils/
+│   └── validation.js # Schémas Joi
+├── scripts/
+│   └── seed.js      # Population DB
+└── server.js        # Entry point
 ```
 
-## 🔗 Frontend Integration
+## 🔗 Intégration Frontend
 
-The frontend (React 19 + Vite) is configured to use this API:
+Le frontend (React 19 + Vite) est configuré pour utiliser cette API:
 
-```javascript
-// .env
+```env
+# .env.development
 VITE_APP_API_URL=http://localhost:3000/api
+
+# .env.production
+VITE_APP_API_URL=https://api-apix-pap.vercel.app/api
 ```
 
-All frontend requests will automatically include the JWT token.
+Voir [C:/gravity/apix-pap/src/services/ApiServiceV2.js](../apix-pap/src/services/ApiServiceV2.js) pour intégration.
 
 ## 📚 Database
 
@@ -149,94 +202,76 @@ All frontend requests will automatically include the JWT token.
 - **Reclamations** - Complaints
 - **Workflows** - Workflow tracking
 
-## 🛠️ Development
+## 🛠️ Développement
 
-### Project Scripts
-
-```bash
-npm run dev              # Start dev server with nodemon
-npm start               # Start production server
-npm test                # Run tests
-npm run test:coverage   # Run tests with coverage
-npm run seed            # Seed database with sample data
-npm run lint            # Run ESLint
-```
-
-### Adding a New Route
-
-1. Create controller in `src/controllers/`
-2. Create route in `src/routes/`
-3. Import route in `server.js`
-4. Add middleware as needed (auth, validation, etc.)
-
-## 🚨 Error Handling
-
-All errors return a standardized JSON response:
-
-```json
-{
-  "success": false,
-  "error": {
-    "status": 400,
-    "message": "Error message"
-  }
-}
-```
-
-## 📝 Logging
-
-Request logging is enabled by default:
-
-```
-🟢 [200] GET /api/pap/list - 45ms
-🔴 [404] GET /api/unknown - 2ms
-```
-
-## 🔒 Security Features
-
-- JWT authentication
-- Role-based access control (RBAC)
-- CORS configuration
-- Request validation with Joi
-- Secure password hashing with bcryptjs
-- Environment variable protection
-
-## 🚀 Deployment
-
-### Vercel
+### Scripts NPM
 
 ```bash
-# Deploy to Vercel
-vercel deploy
+npm run dev      # Serveur dev avec nodemon
+npm start        # Serveur production
+npm run seed     # Seed database (50 PAPs + 150 Biens)
 ```
 
-### Docker
+### Ajouter une nouvelle route
+
+1. Créer contrôleur: `src/controllers/nova.controller.js`
+2. Créer routes: `src/routes/nova.routes.js`
+3. Importer dans `server.js`: `app.use('/api/nova', novaRoutes)`
+4. Ajouter middleware: `authenticate`, `authorize(['admin'])`
+
+**Voir [INSTALLATION_GUIDE.md](./INSTALLATION_GUIDE.md#développement) pour détails**
+
+## 🔒 Sécurité
+
+- ✅ JWT authentication (7 jours)
+- ✅ RBAC (5 rôles)
+- ✅ CORS par origine
+- ✅ Validation Joi
+- ✅ Protection env vars
+- ✅ Logs sans données sensibles
+
+## 🚀 Déploiement
+
+### Railway.app (Recommandé)
 
 ```bash
-# Build image
-docker build -t apix-pap-backend .
-
-# Run container
-docker run -p 3000:3000 apix-pap-backend
+# 1. Connecter GitHub
+# 2. Railway détecte Node.js automatiquement
+# 3. Ajouter MongoDB plugin
+# 4. Configurer MONGODB_URI env var
+# 5. Deploy!
 ```
 
-### Cloud Platforms
+### Render.com
 
-- **Render.com** - Free Node.js hosting
-- **Railway.app** - Simple deployment
-- **Heroku** - Traditional PaaS
-- **AWS/GCP/Azure** - Enterprise solutions
+```bash
+# 1. Connecter GitHub
+# 2. Select "Web Service"
+# 3. Build: npm install
+# 4. Start: npm start
+# 5. Ajouter MongoDB Atlas
+```
+
+### Vercel (Functions uniquement)
+
+⚠️ Vercel c'est pour React frontend  
+✅ Utiliser Railway, Render, ou Fly.io pour backend
+
+## 📚 Ressources
+
+- **Frontend**: [C:/gravity/apix-pap](../apix-pap) (React 19 + Vite)
+- **API Tests**: [API_TESTING.md](./API_TESTING.md)
+- **Setup**: [INSTALLATION_GUIDE.md](./INSTALLATION_GUIDE.md)
+- **Integration**: [BACKEND_INTEGRATION.md](./BACKEND_INTEGRATION.md)
 
 ## 📞 Support
 
-For issues or questions:
-- GitHub Issues: [github.com/mamadouelimanewane/apix-pap-backend](https://github.com)
+Pour questions ou bugs:
 - Email: mamadouastelwane@gmail.com
-
-## 📄 License
-
-MIT License - See LICENSE file for details
+- GitHub Issues: [apix-pap/issues](https://github.com/mamadouelimanewane/apix-pap/issues)
 
 ---
 
-**Status**: 🚀 Backend scaffolding complete. Ready for full implementation.
+**État**: ✅ **v1.0.0 Production Ready**  
+**Dernière mise à jour**: 2026-08-27  
+**4 contrôleurs complets** | **30+ endpoints** | **Full workflow implementation** | **MongoDB + JWT + RBAC**
