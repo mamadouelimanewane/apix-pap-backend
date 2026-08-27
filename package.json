@@ -1,0 +1,41 @@
+{
+  "name": "apix-pap-backend",
+  "version": "1.0.0",
+  "description": "APIX-PAP Backend API - Node.js/Express",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "seed": "node src/scripts/seed.js",
+    "lint": "eslint src --fix"
+  },
+  "keywords": [
+    "apix",
+    "pap",
+    "api",
+    "express",
+    "mongodb"
+  ],
+  "author": "Mamadou Dia",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "joi": "^17.9.2",
+    "morgan": "^1.10.0",
+    "axios": "^1.4.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22",
+    "vitest": "^0.34.4",
+    "supertest": "^6.3.3",
+    "eslint": "^8.40.0"
+  }
+}
