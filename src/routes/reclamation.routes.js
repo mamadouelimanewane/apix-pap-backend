@@ -1,16 +1,16 @@
 import express from 'express';
-import { asyncHandler } from '../middleware/errorHandler.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, authorize } from '../middleware/auth.js';
+import { reclamationController } from '../controllers/reclamation.controller.js';
 
 const router = express.Router();
 router.use(authenticate);
 
-router.post('/create/:papCode', asyncHandler(async (req, res) => {
-  res.status(201).json({ success: true, message: 'Reclamation created', data: {} });
-}));
-
-router.get('/list/:papCode', asyncHandler(async (req, res) => {
-  res.json({ success: true, data: [] });
-}));
+router.get('/list/:papCode', reclamationController.listReclamationsByPAP);
+router.get('/stats/:papCode', reclamationController.getReclamationStats);
+router.get('/:reclamationCode', reclamationController.getReclamationById);
+router.post('/create/:papCode', reclamationController.createReclamation);
+router.post('/review/:reclamationCode', authorize(['admin', 'chef_projet']), reclamationController.reviewReclamation);
+router.post('/resolve/:reclamationCode', authorize(['admin', 'chef_projet']), reclamationController.resolveReclamation);
+router.post('/reject/:reclamationCode', authorize(['admin', 'chef_projet']), reclamationController.rejectReclamation);
 
 export default router;
